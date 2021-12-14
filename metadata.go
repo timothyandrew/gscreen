@@ -82,7 +82,7 @@ func (c *MetadataCache) fetch(client *http.Client, out chan MediaItem) error {
 
 		if resp.StatusCode != 200 {
 			log.Println("Received non-200 response while fetching metadata", resp.StatusCode)
-			return err
+			continue
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
