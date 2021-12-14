@@ -70,5 +70,5 @@ func main() {
 
 	client := config.Client(ctx, token)
 	cache := InitializeMetadataCache(ctx, client)
-	InitializeHttpServer(cache)
+	InitializeHttpServer(cache, client)
 }
