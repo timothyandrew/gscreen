@@ -32,12 +32,14 @@ func image(cache *MetadataCache, client *http.Client) func(http.ResponseWriter, 
 						window.setTimeout(function() {
 							window.location.reload();
 						}, 8000);
+						
+						console.debug("Cached media items: ", %d)
 					</script>
 				</body>
 			</html>
 		`
 
-		fmt.Fprintf(w, s, url)
+		fmt.Fprintf(w, s, url, len(cache.cache))
 	}
 }
 
