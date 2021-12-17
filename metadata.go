@@ -114,7 +114,7 @@ func (c *MetadataCache) fetch(client *http.Client, out chan MediaItem) error {
 		i++
 
 		if r.NextPageToken == "" {
-			log.Println("Fetched all metadata pages")
+			log.Printf("Fetched all metadata pages; cache size: %d\n", len(c.cache))
 			return nil
 		} else {
 			nextPage = r.NextPageToken
