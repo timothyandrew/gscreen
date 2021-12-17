@@ -1,12 +1,77 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 )
+
+type DownloadCache = chan []byte
+
+func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata *MetadataCache) DownloadCache {
+	cache := make(chan []byte, 10)
+
+	go func() {
+		for {
+			item, err := metadata.Random()
+			if err != nil {
+				log.Println("Couldn't get a random image's metadata; going to wait and continue", err)
+				time.Sleep(2 * time.Second)
+				continue
+			}
+
+			url, err := GetImageUrl(client, item)
+			if err != nil {
+				log.Println("GetImageUrl failed; continuing...", err)
+				continue
+			}
+
+			image, err := GetImage(fmt.Sprintf("%s=w4000", url))
+			if err != nil {
+				log.Println("GetImage failed; continuing...", err)
+				continue
+			}
+
+			select {
+			case cache <- image:
+				// nothing
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
+	return cache
+}
+
+func GetImage(url string) ([]byte, error) {
+	client := http.Client{Timeout: 3 * time.Second}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		log.Println("Failed to download image", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Println("Received non-200 response while fetching image", resp.StatusCode)
+		return nil, err
+	}
+
+	image, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("Failed to read image response", err)
+		return nil, err
+	}
+
+	return image, nil
+}
 
 // Can't rely on initial `baseUrl` because it only lasts 60 minutes
 func GetImageUrl(client *http.Client, item MediaItem) (string, error) {
@@ -17,6 +82,8 @@ func GetImageUrl(client *http.Client, item MediaItem) (string, error) {
 		log.Println("Failed to fetch metadata", err)
 		return "", err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		log.Println("Received non-200 response while fetching metadata", resp.StatusCode)

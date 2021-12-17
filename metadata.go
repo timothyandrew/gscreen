@@ -54,9 +54,13 @@ func InitializeMetadataCache(ctx context.Context, client *http.Client) *Metadata
 	return &cache
 }
 
-func (c *MetadataCache) Random() MediaItem {
+func (c *MetadataCache) Random() (MediaItem, error) {
+	if len(c.cache) == 0 {
+		return MediaItem{}, fmt.Errorf("metadata hasn't been downloaded yet")
+	}
+
 	i := rand.Intn(len(c.cache))
-	return c.cache[i]
+	return c.cache[i], nil
 }
 
 func (c *MetadataCache) fetch(client *http.Client, out chan MediaItem) error {

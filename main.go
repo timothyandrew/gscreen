@@ -69,6 +69,9 @@ func main() {
 	}
 
 	client := config.Client(ctx, token)
-	cache := InitializeMetadataCache(ctx, client)
-	InitializeHttpServer(cache, client)
+
+	metadataCache := InitializeMetadataCache(ctx, client)
+	downloadCache := InitializeDownloadCache(ctx, client, metadataCache)
+
+	InitializeHttpServer(downloadCache)
 }
