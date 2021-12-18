@@ -19,6 +19,8 @@ func InitializeMetadataCache(ctx context.Context, client *http.Client) *Metadata
 	cache := MetadataCache{}
 	items := make(chan MediaItem, 10000)
 
+	// TODO: Write cache to disk
+
 	// Refresh cache periodically
 	go func() {
 	L:
@@ -54,13 +56,17 @@ func InitializeMetadataCache(ctx context.Context, client *http.Client) *Metadata
 	return &cache
 }
 
-func (c *MetadataCache) Random() (MediaItem, error) {
+func (c *MetadataCache) Random(count int) (items []MediaItem, err error) {
 	if len(c.cache) == 0 {
-		return MediaItem{}, fmt.Errorf("metadata hasn't been downloaded yet")
+		return []MediaItem{}, fmt.Errorf("metadata hasn't been downloaded yet")
 	}
 
-	i := rand.Intn(len(c.cache))
-	return c.cache[i], nil
+	for i := 0; i < count; i++ {
+		i := rand.Intn(len(c.cache))
+		items = append(items, c.cache[i])
+	}
+
+	return
 }
 
 func (c *MetadataCache) fetch(client *http.Client, out chan MediaItem) error {

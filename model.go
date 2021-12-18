@@ -18,3 +18,17 @@ type ListMediaItemsResponse struct {
 	MediaItems    []MediaItem `json:"mediaItems"`
 	NextPageToken string      `json:"nextPageToken"`
 }
+
+type Status struct {
+	Code    int    `json:"code"`
+	Message string `json:"string"`
+}
+
+type MediaItemResult struct {
+	Status    Status    `json:"status"`
+	MediaItem MediaItem `json:"mediaItem"`
+}
+
+type BatchGetMediaItemsResponse struct {
+	MediaItemResults []MediaItemResult `json:"mediaItemResults"`
+}
