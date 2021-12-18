@@ -87,7 +87,7 @@ func GetImageUrl(client *http.Client, item MediaItem) (string, error) {
 
 	if resp.StatusCode != 200 {
 		log.Println("Received non-200 response while fetching metadata", resp.StatusCode)
-		return "", err
+		return "", fmt.Errorf("non-200 response while fetching metadata: %d", resp.StatusCode)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)

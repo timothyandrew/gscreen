@@ -42,5 +42,5 @@ func InitializeHttpServer(cache DownloadCache) {
 	http.HandleFunc("/", html)
 	http.HandleFunc("/image", image(cache))
 	log.Println("Starting HTTP server at :9999")
-	http.ListenAndServe(":9999", nil)
+	http.ListenAndServe("0.0.0.0:9999", nil)
 }
