@@ -10,10 +10,15 @@ import (
 	"time"
 )
 
-type DownloadCache = chan []byte
+type CachedImage struct {
+	mediaItem MediaItem
+	data      []byte
+}
+
+type DownloadCache = chan CachedImage
 
 func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata *MetadataCache) DownloadCache {
-	cache := make(chan []byte, 10)
+	cache := make(chan CachedImage, 10)
 
 	go func() {
 		for {
@@ -37,7 +42,7 @@ func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata 
 			}
 
 			select {
-			case cache <- image:
+			case cache <- CachedImage{item, image}:
 				// nothing
 			case <-ctx.Done():
 				return
