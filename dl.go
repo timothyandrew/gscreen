@@ -33,33 +33,29 @@ func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata 
 				continue
 			}
 
-			urls, err := GetImageUrls(client, items)
+			items, err = RefreshBaseUrls(client, items)
 			if err != nil {
-				log.Println("GetImageUrl failed; continuing...", err)
+				log.Println("Failed to get base URLs; continuing...", err)
 				continue
 			}
 
 			imageChan := make(chan CachedImage, batchSize)
 			var wg sync.WaitGroup
 
-			for i := 0; i < len(urls); i++ {
-				if urls[i] == "" {
-					continue
-				}
-
+			for _, item := range items {
 				wg.Add(1)
 
 				// TODO: Worker pool to avoid 50 downloads at once
-				go func(out chan CachedImage, i int) {
+				go func(out chan CachedImage, item MediaItem) {
 					defer wg.Done()
-					image, err := GetImage(fmt.Sprintf("%s=w4000", urls[i]))
+					image, err := GetImage(fmt.Sprintf("%s=w4000", item.BaseUrl))
 					if err != nil {
 						log.Println("GetImage failed; continuing...", err)
 						return
 					}
 
-					out <- CachedImage{items[i], image}
-				}(imageChan, i)
+					out <- CachedImage{item, image}
+				}(imageChan, item)
 			}
 
 			go func() {
@@ -82,7 +78,7 @@ func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata 
 }
 
 func GetImage(url string) ([]byte, error) {
-	client := http.Client{Timeout: 5 * time.Second}
+	client := http.Client{Timeout: 30 * time.Second}
 
 	resp, err := client.Get(url)
 	if err != nil {
@@ -107,7 +103,7 @@ func GetImage(url string) ([]byte, error) {
 }
 
 // Can't rely on initial `baseUrl` because it only lasts 60 minutes
-func GetImageUrls(client *http.Client, items []MediaItem) (urls []string, err error) {
+func RefreshBaseUrls(client *http.Client, items []MediaItem) (urls []MediaItem, err error) {
 	url := "https://photoslibrary.googleapis.com/v1/mediaItems:batchGet?mediaItemIds="
 	url += items[0].Id
 
@@ -144,10 +140,9 @@ func GetImageUrls(client *http.Client, items []MediaItem) (urls []string, err er
 	for _, v := range r.MediaItemResults {
 		// https://github.com/googleapis/googleapis/blob/master/google/rpc/code.proto
 		if v.Status.Code == 0 {
-			urls = append(urls, v.MediaItem.BaseUrl)
+			urls = append(urls, v.MediaItem)
 		} else {
 			log.Printf("BatchGet failed on Id %d with error code %d and error %s\n", v.Status.Code, v.Status.Message)
-			urls = append(urls, "")
 		}
 	}
 
