@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"os/user"
 	"strings"
@@ -39,6 +40,7 @@ func initialAuth(config oauth2.Config) *oauth2.Token {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	ctx := context.Background()
 
 	usr, _ := user.Current()
