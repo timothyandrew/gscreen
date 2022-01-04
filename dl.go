@@ -48,7 +48,13 @@ func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata 
 				// TODO: Worker pool to avoid 50 downloads at once
 				go func(out chan CachedImage, item MediaItem) {
 					defer wg.Done()
-					image, err := GetImage(fmt.Sprintf("%s=w4000", item.BaseUrl))
+
+					url := fmt.Sprintf("%s=w4000", item.BaseUrl)
+					if item.isVideo() {
+						url = fmt.Sprintf("%s=dv", item.BaseUrl)
+					}
+
+					image, err := GetMediaBytes(url)
 					if err != nil {
 						log.Println("GetImage failed; continuing...", err)
 						return
@@ -77,7 +83,7 @@ func InitializeDownloadCache(ctx context.Context, client *http.Client, metadata 
 	return cache
 }
 
-func GetImage(url string) ([]byte, error) {
+func GetMediaBytes(url string) ([]byte, error) {
 	client := http.Client{Timeout: 30 * time.Second}
 
 	resp, err := client.Get(url)

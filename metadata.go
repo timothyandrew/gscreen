@@ -29,7 +29,7 @@ func InitializeMetadataCache(ctx context.Context, client *http.Client) *Metadata
 		log.Fatalln("Failed to read cached metadata from disk", err)
 	}
 
-	delayBeforeFirstFetch := 24 * time.Hour
+	delayBeforeFirstFetch := 12 * time.Hour
 
 	if len(cache.cache) == 0 {
 		delayBeforeFirstFetch = 0

@@ -1,9 +1,17 @@
 package main
 
-import "time"
+import (
+	"strings"
+	"time"
+)
+
+type VideoMetadata struct {
+	Status string `json:"status"`
+}
 
 type MediaMetadata struct {
-	CreationTime time.Time `json:"creationTime"`
+	CreationTime time.Time     `json:"creationTime"`
+	Video        VideoMetadata `json:"video"`
 }
 
 type MediaItem struct {
@@ -31,4 +39,12 @@ type MediaItemResult struct {
 
 type BatchGetMediaItemsResponse struct {
 	MediaItemResults []MediaItemResult `json:"mediaItemResults"`
+}
+
+func (m *MediaItem) isImage() bool {
+	return strings.Contains(m.MimeType, "image")
+}
+
+func (m *MediaItem) isVideo() bool {
+	return strings.Contains(m.MimeType, "video") && m.Metadata.Video.Status == "READY"
 }

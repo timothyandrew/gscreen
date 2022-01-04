@@ -12,6 +12,16 @@ func html(cache DownloadCache) func(http.ResponseWriter, *http.Request) {
 		cached := <-cache
 		imageStr := base64.StdEncoding.EncodeToString(cached.data)
 
+		mediaHtml := fmt.Sprintf(`<img src="data:image/jpeg;charset=utf-8;base64,%s" />`, imageStr)
+
+		if cached.mediaItem.isVideo() {
+			mediaHtml = fmt.Sprintf(`
+			<video autoplay muted loop>
+				<source type="%s" src="data:%s;base64,%s" />
+			</video>
+			`, cached.mediaItem.MimeType, cached.mediaItem.MimeType, imageStr)
+		}
+
 		s := `
 			<html>
 				<head>
@@ -25,7 +35,7 @@ func html(cache DownloadCache) func(http.ResponseWriter, *http.Request) {
 							margin: 0;
 							padding: 0;
 						}
-						img {
+						img, video {
 							margin: 0 auto;
 							height: 100%%;
 							display: block;
@@ -43,7 +53,7 @@ func html(cache DownloadCache) func(http.ResponseWriter, *http.Request) {
 				<body>
 					<div>
 						<span>%s</span>
-						<img src="data:image/jpeg;charset=utf-8;base64,%s" />
+						%s
 					</div>
 					<script type="text/javascript">
 						window.setTimeout(function() {
@@ -54,7 +64,7 @@ func html(cache DownloadCache) func(http.ResponseWriter, *http.Request) {
 			</html>
 		`
 
-		fmt.Fprintf(w, s, cached.mediaItem.Metadata.CreationTime, imageStr)
+		fmt.Fprintf(w, s, cached.mediaItem.Metadata.CreationTime, mediaHtml)
 	}
 }
 
