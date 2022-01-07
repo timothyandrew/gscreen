@@ -42,7 +42,6 @@ func InitializeMetadataCache(ctx context.Context, client *http.Client) *Metadata
 	L:
 		for {
 			log.Println("Attempting to fetch/refresh metadata")
-			cache.cache = []MediaItem{}
 			err := cache.fetch(client, items)
 			if err != nil {
 				log.Println("Failed to fetch metadata", err)
